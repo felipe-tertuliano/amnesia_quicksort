@@ -27,6 +27,7 @@ Inicialmente é preciso entender o funcionamento do simulador Amnesia e a propos
 > - Rótulo “2”: busca de instrução;
 > - Rótulo “3”: registro escape (tratado como tipo de acesso desconhecido);
 > - Rótulo “4”: registro escape (operação de cache flush).
+>
 > Amnesia, Tutorial técnico do módulo memória virtual. Arquivos de trace.
 
 Somente os rótulos de leitura e gravação de dados (0 e 1 respectivamente) serão utilizados, isso porque será avaliado o impacto do número de cache hits que independe de operações que não sejam essas duas informadas. E assim, tendo em vista tudo o que foi explicado, a proposta é criar código capaz de executar o algoritmo quicksort em três cenários (melhor caso, caso médio e pior caso) e imprimir seus respectivos traces compatíveis com a execução e o simulador Amnesia.
