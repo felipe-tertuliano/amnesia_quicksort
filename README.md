@@ -44,7 +44,7 @@ state::set(&ADRS_HASH, adrs_hash);
 state::set(&PC, tmp);
 new_value = tmp;
 ```
-[https://github.com/felipe-tertuliano/amnesia_quicksort/blob/main/src/tracer/mod.rs](https://github.com/felipe-tertuliano/amnesia_quicksort/blob/main/src/tracer/mod.rs). Linha 27 até 35.
+> [https://github.com/felipe-tertuliano/amnesia_quicksort/blob/main/src/tracer/mod.rs](https://github.com/felipe-tertuliano/amnesia_quicksort/blob/main/src/tracer/mod.rs). Linha 27 até 35.
 
 ### Geração do trace
 
@@ -70,7 +70,7 @@ pub fn rw(r: &[usize], w: &[usize]) {
 	}
 }
 ```
-[https://github.com/felipe-tertuliano/amnesia_quicksort/blob/main/src/tracer/mod.rs](https://github.com/felipe-tertuliano/amnesia_quicksort/blob/main/src/tracer/mod.rs). Linha 41 até 52.
+> [https://github.com/felipe-tertuliano/amnesia_quicksort/blob/main/src/tracer/mod.rs](https://github.com/felipe-tertuliano/amnesia_quicksort/blob/main/src/tracer/mod.rs). Linha 41 até 52.
 
 ### Implementação do quicksort
 
@@ -146,7 +146,7 @@ pub fn trace_quicksort(arr: &mut Vec<u8>, low: &isize, high: &isize) {
 	}
 }
 ```
-[https://github.com/felipe-tertuliano/amnesia_quicksort/blob/main/src/tracer/quicksort.rs](https://github.com/felipe-tertuliano/amnesia_quicksort/blob/main/src/tracer/quicksort.rs). Linha 3 até 70.
+> [https://github.com/felipe-tertuliano/amnesia_quicksort/blob/main/src/tracer/quicksort.rs](https://github.com/felipe-tertuliano/amnesia_quicksort/blob/main/src/tracer/quicksort.rs). Linha 3 até 70.
 
 ### Traces gerados
 
@@ -189,4 +189,4 @@ fn main() {
 	worst_case_scenario();
 }
 ```
-[https://github.com/felipe-tertuliano/amnesia_quicksort/blob/main/src/main.rs](https://github.com/felipe-tertuliano/amnesia_quicksort/blob/main/src/main.rs). Linha 5 até 33.
+> [https://github.com/felipe-tertuliano/amnesia_quicksort/blob/main/src/main.rs](https://github.com/felipe-tertuliano/amnesia_quicksort/blob/main/src/main.rs). Linha 5 até 33.
