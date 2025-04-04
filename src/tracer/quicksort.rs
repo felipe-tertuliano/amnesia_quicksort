@@ -1,6 +1,6 @@
 use super::{adrs, rw};
 
-fn swap(arr: &mut Vec<u8>, a: &isize, b: &isize) {
+fn trace_swap(arr: &mut Vec<u8>, a: &isize, b: &isize) {
 	let tmp = arr[*a as usize];
 	rw(&[adrs(a), adrs(arr)], &[adrs(&tmp)]);
 
@@ -11,7 +11,7 @@ fn swap(arr: &mut Vec<u8>, a: &isize, b: &isize) {
 	rw(&[adrs(&tmp)], &[adrs(&arr)]);
 }
 
-pub fn trace(arr: &mut Vec<u8>, low: &isize, high: &isize) {
+pub fn trace_quicksort(arr: &mut Vec<u8>, low: &isize, high: &isize) {
 	rw(&[adrs(low), adrs(high)], &[]);
 	if low < high {
 		let mut tmp = *high - *low;
@@ -48,7 +48,7 @@ pub fn trace(arr: &mut Vec<u8>, low: &isize, high: &isize) {
 
 			rw(&[adrs(&i), adrs(&j)], &[]);
 			if i <= j {
-				swap(arr, &i, &j);
+				trace_swap(arr, &i, &j);
 				i = i + 1;
 				rw(&[adrs(&i)], &[adrs(&i)]);
 				j = j - 1;
@@ -59,12 +59,12 @@ pub fn trace(arr: &mut Vec<u8>, low: &isize, high: &isize) {
 
 		rw(&[adrs(&i), adrs(&high)], &[]);
 		if i < *high {
-			trace(arr, &i, high);
+			trace_quicksort(arr, &i, high);
 		}
 
 		rw(&[adrs(&low), adrs(&j)], &[]);
 		if *low < j {
-			trace(arr, low, &j);
+			trace_quicksort(arr, low, &j);
 		}
 	}
 }
