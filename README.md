@@ -113,14 +113,14 @@ pub fn trace_quicksort(arr: &mut Vec<u8>, low: &isize, high: &isize) {
 				i = i + 1;
 				rw(&[adrs(&i)], &[adrs(&i)]);
 			}
-			rw(&[adrs(&i), adrs(&arr), adrs(&pivot)], &[]);
+			rw(&[adrs(&i), adrs(&arr), adrs(&pivot)], &[]); // `while` exit validation
 
 			while arr[j as usize] > pivot {
 				rw(&[adrs(&j), adrs(&arr), adrs(&pivot)], &[]);
 				j = j - 1;
 				rw(&[adrs(&j)], &[adrs(&j)]);
 			}
-			rw(&[adrs(&j), adrs(&arr), adrs(&pivot)], &[]);
+			rw(&[adrs(&j), adrs(&arr), adrs(&pivot)], &[]); // `while` exit validation
 
 			rw(&[adrs(&i), adrs(&j)], &[]);
 			if i <= j {
@@ -131,7 +131,7 @@ pub fn trace_quicksort(arr: &mut Vec<u8>, low: &isize, high: &isize) {
 				rw(&[adrs(&j)], &[adrs(&j)]);
 			}
 		}
-		rw(&[adrs(&i), adrs(&j)], &[]);
+		rw(&[adrs(&i), adrs(&j)], &[]); // `while` exit validation
 
 		rw(&[adrs(&i), adrs(&high)], &[]);
 		if i < *high {
