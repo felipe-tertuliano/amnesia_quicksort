@@ -16,7 +16,7 @@ cargo run
 
 ## Metodologia
 
-Inicialmente precisamos entender o funcionamento do simulador Amnesia e a proposta com o trace gerado no código. O simulador Amnesia tem como objetivo simular de forma visual o funcionamento da memória em um processador, para isso ele precisa de um arquivo de trace para representar um programa sendo executado, entretanto seu trace é diferente:
+Inicialmente é preciso entender o funcionamento do simulador Amnesia e a proposta com o trace gerado no código. O simulador Amnesia tem como objetivo simular de forma visual o funcionamento da memória em um processador, para isso ele precisa de um arquivo de trace para representar um programa sendo executado, entretanto seu trace é diferente:
 
 > Carlos Emilio de Andrade Cacho (2015). O arquivo trace ou arquivo de rastro pode ser escrito seguindo algumas orientações:
 >
@@ -47,3 +47,10 @@ new_value = tmp;
 
 ### Gerando o trace
 
+A geração do trace e dada pela função `rw` que recebe como parâmetro dois vetores de endereços: um de leitura e outro de escrita, assim se consegue replicar a execução de linhas de código como traces. Junto disso a função `adrs` é usada para converter o ponteiro da variável em um valor legível para `ADRS_HASH`, segue uma tabela com os exemplos de uso das funções:
+
+| Linha de código | Equivalente com `rw` + `adrs` |
+| - | - |
+| `if a == true {` | `rw(&[adrs(&a)], &[]);` |
+| `a = 2` | `rw(&[], &[adrs(&a)]);` |
+| `a = b + c;` | `rw(&[adrs(&b), adrs(&c)], &[adrs(&a)]);` |
