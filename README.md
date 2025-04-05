@@ -16,25 +16,23 @@ cargo run
 
 ## Metodologia
 
-Inicialmente é preciso entender o funcionamento do simulador Amnesia e a proposta com o trace gerado no código. O simulador Amnesia tem como objetivo simular de forma visual o funcionamento da memória em um processador, para isso ele precisa de um arquivo de trace para representar um programa sendo executado, entretanto seu trace é diferente:
+Inicialmente é preciso entender o funcionamento do simulador Amnesia e a proposta associada ao trace gerado pelo código. O simulador Amnesia tem como objetivo simular, de forma visual, o funcionamento da memória em um processador. Para tanto, ele utiliza um arquivo de trace que representa a execução de um programa. Entretanto, o formato do trace empregado pelo Amnesia difere dos padrões convencionais.
 
-> Carlos Emilio de Andrade Cacho (2015). O arquivo trace ou arquivo de rastro pode ser escrito seguindo algumas orientações:
->
+Conforme descrito por Carlos Emilio de Andrade Cacho (2015), o arquivo trace ou arquivo de rastro deve obedecer às seguintes orientações:[^1]
+
 > Cada linha deste arquivo é composta de uma dupla: rótulo (decimal) e endereço (hexadecimal). Qualquer outra informação é vista como um comentário. Um exemplo pode ser visto na Figura 11. Os rótulos possíveis são:
->
-> - Rótulo “0”: leitura de dados;
-> - Rótulo “1”: gravação de dados;
-> - Rótulo “2”: busca de instrução;
-> - Rótulo “3”: registro escape (tratado como tipo de acesso desconhecido);
-> - Rótulo “4”: registro escape (operação de cache flush).
->
-> Amnesia, Tutorial técnico do módulo memória virtual. Arquivos de trace.
+> 
+> - **0:** leitura de dados;
+> - **1:** gravação de dados;
+> - **2:** busca de instrução;
+> - **3:** registro escape (tratado como tipo de acesso desconhecido);
+> - **4:** registro escape (operação de cache flush).
 
-Somente os rótulos de leitura e gravação de dados (0 e 1 respectivamente) serão utilizados, isso porque será avaliado o impacto do número de cache hits que independe de operações que não sejam essas duas informadas. E assim, tendo em vista tudo o que foi explicado, a proposta é criar código capaz de executar o algoritmo quicksort em três cenários (melhor caso, caso médio e pior caso) e imprimir seus respectivos traces compatíveis com a execução e o simulador Amnesia.
+Para a proposta apresentada, serão usados somente os rótulos de leitura e gravação de dados (0 e 1, respectivamente), isso porque será analisado o impacto do número de acessos a memória, o que independe das outras funcionalidades. E partindo dessas premissas, o objetivo é desenvolver um código capaz de executar o algoritmo Quicksort em três cenários (melhor caso, caso médio e pior caso) e imprimir os traces compatíveis com a execução e o simulador Amnesia.
 
 ### Endereços
 
-Para simular a real alocação dos endereços no trace é desenvolvido duas variáveis globais de controle: `ADRS_HASH` e `PC`. `ADRS_HASH` é uma tabela hash onde as chaves são os endereços reais das variáveis usadas no código e os valores endereços falsos e menores para representarem suas chaves no trace. `PC` é um número natural de oito bits usado para gerar os valores de `ADRS_HASH`, onde para cada nova chave seu valor é igual ao conteúdo de `PC` e após isso é adicionado 1 ao `PC`, prevenindo assim dados repetidos.
+Para simular a alocação real dos endereços no trace, são utilizadas duas variáveis globais de controle: `ADRS_HASH` e `PC`. A variável `ADRS_HASH` representa uma tabela hash onde as chaves são os endereços reais das variáveis utilizadas no código e os valores são endereços falsos (menores) que representam essas chaves no trace. Já `PC` é um contador de 8 bits usado para gerar os valores de `ADRS_HASH`. Para cada nova chave, o valor atribuído é igual ao conteúdo atual de `PC` e, em seguida, `PC` é incrementado em 1, evitando assim a repetição de dados.
 
 ```rust
 let pc = state::get(&PC);
@@ -44,37 +42,41 @@ state::set(&ADRS_HASH, adrs_hash);
 state::set(&PC, tmp);
 new_value = tmp;
 ```
-> [https://github.com/felipe-tertuliano/amnesia_quicksort/blob/main/src/tracer/mod.rs](https://github.com/felipe-tertuliano/amnesia_quicksort/blob/main/src/tracer/mod.rs). Linha 27 até 35.
 
-### Geração do trace
+O código acima está disponível em [GitHub](https://github.com/felipe-tertuliano/amnesia_quicksort/tree/main/src/tracer/mod.rs) (linhas 27 a 35).
 
-A geração do trace e dada pela função `rw` que recebe como parâmetro dois vetores de endereços: um de leitura e outro de escrita, assim se consegue replicar a execução de linhas de código como traces. Junto disso a função `adrs` é usada para converter o ponteiro da variável em um valor legível para `ADRS_HASH`, segue uma tabela com os exemplos de uso das funções:
+### Mapeamento do Trace
 
-| Linha de código | Equivalente com `rw` + `adrs` |
-| - | - |
-| `if a == true {` | `rw(&[adrs(&a)], &[]);` |
-| `a = 2` | `rw(&[], &[adrs(&a)]);` |
-| `a = b + c;` | `rw(&[adrs(&b), adrs(&c)], &[adrs(&a)]);` |
+O mapeamento do trace é realizado por meio da função `rw`, que recebe dois vetores de endereços: um para leituras e outro para escritas. Dessa forma, é possível replicar a execução de linhas de código por meio de traces. Junto disso, a função `adrs` é utilizada para converter o ponteiro de uma variável em um valor legível para `ADRS_HASH`. A Tabela abaixo ilustra alguns exemplos de uso das funções.
+
+| Linha de Código   | Equivalente com `rw` e `adrs`   |
+| ----------------- | ------------------------------- |
+| `if a == true { ` | `rw(&[adrs(&a)], &[]);`         |
+| `a = 2`           | `rw(&[], &[adrs(&a)]);`         |
+| `a = b;`          | `rw(&[adrs(&b)], &[adrs(&a)]);` |
+
+As funções são implementadas da seguinte forma:
 
 ```rust
-pub fn adrs<T>(value: &T) -> usize {
-	return value as *const T as usize;
+pub fn adrs<T>(value: &T) -> usize {s
+    return value as *const T as usize;
 }
 
 pub fn rw(r: &[usize], w: &[usize]) {
-	for e in r {
-		trace(TraceTypeEnum::READ, *e);
-	}
-	for e in w {
-		trace(TraceTypeEnum::WRITE, *e);
-	}
+    for e in r {
+        trace(TraceTypeEnum::READ, *e);
+    }
+    for e in w {
+        trace(TraceTypeEnum::WRITE, *e);
+    }
 }
 ```
-> [https://github.com/felipe-tertuliano/amnesia_quicksort/blob/main/src/tracer/mod.rs](https://github.com/felipe-tertuliano/amnesia_quicksort/blob/main/src/tracer/mod.rs). Linha 41 até 52.
 
-### Implementação do quicksort
+Conforme demonstrado, a função `rw` itera pelos vetores de leitura e escrita, invocando a função `trace` com o tipo de acesso adequado para cada endereço. O código acima está disponível em [GitHub](https://github.com/felipe-tertuliano/amnesia_quicksort/tree/main/src/tracer/mod.rs) (linhas 41 a 52).
 
-O Algoritmo quicksort foi implementado na função `trace_quicksort`, onde para cada linha de código que lê ou escreve em uma variável existe uma linha adjacente que faz sua equivalência gerando o trace. Para a seleção do pivô se seleciona o valor que se encontra no meio do conjunto a ser ordenado e para a troca de valores dentro do vetor é usada a função `trace_swap` também mapeada com geração de trace.
+### Implementação do Quicksort
+
+O algoritmo Quicksort foi implementado na função `trace_quicksort`. Para cada operação de leitura ou escrita realizada sobre uma variável, há uma chamada correspondente que mapeia essa ação no trace. Na seleção do pivô, é escolhido o valor no meio do conjunto a ser ordenado, e a troca de valores entre elementos do vetor é realizada pela função `trace_swap`, também devidamente mapeada.
 
 ```rust
 fn trace_swap(arr: &mut Vec<u8>, a: &isize, b: &isize) {
@@ -146,47 +148,55 @@ pub fn trace_quicksort(arr: &mut Vec<u8>, low: &isize, high: &isize) {
 	}
 }
 ```
-> [https://github.com/felipe-tertuliano/amnesia_quicksort/blob/main/src/tracer/quicksort.rs](https://github.com/felipe-tertuliano/amnesia_quicksort/blob/main/src/tracer/quicksort.rs). Linha 3 até 70.
 
-### Traces gerados
+O código acima está disponível em [GitHub](https://github.com/felipe-tertuliano/amnesia_quicksort/tree/main/src/tracer/quicksort.rs) (linhas 3 a 70).
 
-Foram gerados três cenários (melhor caso, caso médio e pior caso), cada um deles com um vetor simulando tal ambiente, que são processados pela função `trace_quicksort` e seu trace escrito no terminal. Para os testes os traces gerados foram salvos separadamente em arquivos de texto.
+### Traces Gerados
 
-| Caso | Vetor |
-| - | - |
-| Melhor | `[1, 2, 3, 4, 5, 6]` |
-| Médio | `[6, 2, 4, 3, 5, 1]` |
-| Pior | `[6, 5, 4, 3, 2, 1]` |
+Foram simulados três cenários distintos para a execução do Quicksort, correspondentes ao melhor caso, caso médio e pior caso. Em cada cenário, um vetor representativo do ambiente é processado pela função `trace_quicksort` e o trace resultante é impresso no terminal. Para facilitar a análise, os traces gerados foram salvos separadamente em arquivos de texto.
+
+#### Cenários de Teste e Vetores Utilizados
+
+| Caso        | Vetor              |
+| ----------- | ------------------ |
+| Melhor Caso | [1, 2, 3, 4, 5, 6] |
+| Caso Médio  | [6, 2, 4, 3, 5, 1] |
+| Pior Caso   | [6, 5, 4, 3, 2, 1] |
+
+A seguir, a implementação dos cenários de teste:
 
 ```rust
 fn best_case_scenario() {
-	println!("Best Case Scenario");
-	let mut arr = vec![1, 2, 3, 4, 5, 6];
-	let high = (arr.len() - 1) as isize;
-	trace_quicksort(&mut arr, &0, &high);
-	tracer::reset_pc();
+    println!("Best Case Scenario");
+    let mut arr = vec![1, 2, 3, 4, 5, 6];
+    let high = (arr.len() - 1) as isize;
+    trace_quicksort(&mut arr, &0, &high);
+    tracer::reset_pc();
 }
 
 fn average_case_scenario() {
-	println!("Average Case Scenario");
-	let mut arr = vec![6, 2, 4, 3, 5, 1];
-	let high = (arr.len() - 1) as isize;
-	trace_quicksort(&mut arr, &0, &high);
-	tracer::reset_pc();
+    println!("Average Case Scenario");
+    let mut arr = vec![6, 2, 4, 3, 5, 1];
+    let high = (arr.len() - 1) as isize;
+    trace_quicksort(&mut arr, &0, &high);
+    tracer::reset_pc();
 }
 
 fn worst_case_scenario() {
-	println!("Worst Case Scenario");
-	let mut arr = vec![6, 5, 4, 3, 2, 1];
-	let high = (arr.len() - 1) as isize;
-	trace_quicksort(&mut arr, &0, &high);
-	tracer::reset_pc();
+    println!("Worst Case Scenario");
+    let mut arr = vec![6, 5, 4, 3, 2, 1];
+    let high = (arr.len() - 1) as isize;
+    trace_quicksort(&mut arr, &0, &high);
+    tracer::reset_pc();
 }
 
 fn main() {
-	best_case_scenario();
-	average_case_scenario();
-	worst_case_scenario();
+    best_case_scenario();
+    average_case_scenario();
+    worst_case_scenario();
 }
 ```
-> [https://github.com/felipe-tertuliano/amnesia_quicksort/blob/main/src/main.rs](https://github.com/felipe-tertuliano/amnesia_quicksort/blob/main/src/main.rs). Linha 5 até 33.
+
+O código acima está disponível em [GitHub](https://github.com/felipe-tertuliano/amnesia_quicksort/tree/main/src/main.rs) (linhas 5 a 33).
+
+[^1]: Carlos Emilio de Andrade Cacho, 2015. *Amnesia, Tutorial técnico do módulo memória virtual. Arquivos de trace.*
